@@ -20,7 +20,6 @@
     text-align:center;
   }
 
-  /* Bubbles */
   .bubble{
     position:absolute;
     border-radius:50%;
@@ -35,7 +34,6 @@
     100% { transform: translateY(-20vh) scale(1); opacity:0.3;}
   }
 
-  /* Entering text */
   #entering{
     color:#AAC64B;
     font-weight:bold;
@@ -63,32 +61,13 @@
 <body>
 
 <div id="bubbles"></div>
-
 <img src="images/logo.svg" alt="Church Logo" style="width:120px;height:120px;margin-bottom:20px;z-index:1;position:relative;">
 <h1>Church of the Holy Spirit</h1>
 <p>Rumouke</p>
 <div id="entering">Entering...</div>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js"></script>
-
 <script>
-  // ===== FIREBASE CONFIG =====
-  const firebaseConfig = {
-    apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
-    authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
-    projectId: "church-of-the-holy-spiri-dcdf3",
-    storageBucket: "church-of-the-holy-spiri-dcdf3.appspot.com",
-    messagingSenderId: "926358296297",
-    appId: "1:926358296297:web:31439032719a21e7830278"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // ===== BUBBLES =====
+window.onload = function() {
   const colors = ['#576E45','#899C6F','#AAC64B','#6B746B','#232D26'];
   const bubblesContainer = document.getElementById('bubbles');
   const bubbleCount = 20;
@@ -107,10 +86,11 @@
     bubblesContainer.appendChild(bubble);
   }
 
-  // ===== REDIRECT AFTER SPLASH =====
+  // Redirect after 3 seconds
   setTimeout(()=>{
     window.location.href = "login.html";
   },3000);
+};
 </script>
 </body>
 </html>
