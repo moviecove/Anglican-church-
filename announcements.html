@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Announcements | Church of the Holy Spirit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#576e45;
+  color:#ccd4c9;
+  overflow-x:hidden;
+}
+
+/* HEADER */
+header{
+  background:#232d26;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+header img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+header span{
+  font-size:18px;
+  font-weight:bold;
+  color:#aac64b;
+}
+
+/* CONTAINER */
+.container{
+  padding:15px;
+}
+
+/* TITLE */
+.page-title{
+  font-size:20px;
+  margin-bottom:12px;
+  color:#aac64b;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:15px;
+}
+
+/* CARD */
+.card{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+  transition:transform .3s, box-shadow .3s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 20px rgba(0,0,0,.3);
+}
+.card h4{
+  margin:0 0 6px;
+  color:#aac64b;
+}
+.card small{
+  color:#899c6f;
+  font-size:12px;
+}
+.card p{
+  font-size:14px;
+  color:#ccd4c9;
+  line-height:1.5;
+  margin-top:8px;
+}
+.card img{
+  width:100%;
+  border-radius:8px;
+  margin:10px 0;
+  cursor:pointer;
+  transition:0.3s;
+}
+.card img:hover{
+  transform:scale(1.05);
+}
+
+/* SKELETON */
+.skeleton{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+}
+.skeleton-title{
+  height:14px;
+  width:60%;
+  margin-bottom:10px;
+  border-radius:6px;
+  background:linear-gradient(90deg,#6b746b 25%,#899c6f 37%,#6b746b 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.4s infinite;
+}
+.skeleton-text{
+  height:10px;
+  width:100%;
+  margin-bottom:8px;
+  border-radius:6px;
+  background:linear-gradient(90deg,#6b746b 25%,#899c6f 37%,#6b746b 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.4s infinite;
+}
+
+@keyframes shimmer{
+  0%{background-position:100% 0;}
+  100%{background-position:-100% 0;}
+}
+
+/* FLOATING BACKGROUND SHAPES */
+.bg{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  overflow:hidden;
+}
+.shape{
+  position:absolute;
+  width:18px;
+  height:18px;
+  background:rgba(204,212,201,0.06);
+  transform:rotate(45deg);
+  animation:float 9s linear infinite;
+}
+@keyframes float{
+  from{transform:translateY(-120px) rotate(45deg);}
+  to{transform:translateY(110vh) rotate(45deg);}
+}
+
+/* FULLSCREEN IMAGE MODAL */
+#imgModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+  flex-direction:column;
+}
+#imgModal img{
+  max-width:90%;
+  max-height:80%;
+  border-radius:12px;
+  margin-bottom:15px;
+}
+#imgModal button{
+  padding:8px 15px;
+  background:#aac64b;
+  border:none;
+  border-radius:6px;
+  color:#000;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:14px;
+  transition:0.2s;
+}
+#imgModal button:hover{
+  background:#889c6f;
+}
+</style>
+</head>
+
+<body>
+
+<!-- FLOATING BACKGROUND -->
+<div class="bg" id="bg"></div>
+
+<header>
+  <img src="logo.png">
+  <span>Church of the Holy Spirit</span>
+</header>
+
+<div class="container">
+  <div class="page-title">Church Announcements</div>
+
+  <!-- SKELETON -->
+  <div class="grid" id="skeleton">
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-text"></div>
+      <div class="skeleton-text"></div>
+    </div>
+  </div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div class="grid" id="announcementGrid" style="display:none"></div>
+</div>
+
+<!-- FULLSCREEN IMAGE MODAL -->
+<div id="imgModal">
+  <img src="" alt="Announcement Image">
+  <button onclick="closeModal()">Close</button>
+</div>
+
+<!-- FIREBASE + FIRESTORE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+/* 🔴 FIREBASE CONFIG */
+const firebaseConfig = {
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  storageBucket: "church-of-the-holy-spiri-dcdf3.firebasestorage.app",
+  messagingSenderId: "926358296297",
+  appId: "1:926358296297:web:31439032719a21e7830278",
+  measurementId: "G-FTYLC0P9GR"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const skeleton = document.getElementById("skeleton");
+const grid = document.getElementById("announcementGrid");
+const modal = document.getElementById("imgModal");
+const modalImg = modal.querySelector("img");
+
+function openModal(src){
+  modalImg.src = src;
+  modal.style.display = "flex";
+}
+function closeModal(){
+  modal.style.display = "none";
+  modalImg.src = "";
+}
+
+async function loadAnnouncements(){
+  const q = query(
+    collection(db,"announcements"),
+    orderBy("timestamp","desc")
+  );
+
+  const snap = await getDocs(q);
+  skeleton.style.display="none";
+  grid.style.display="grid";
+
+  if(snap.empty){
+    grid.innerHTML="<p>No announcements yet.</p>";
+    return;
+  }
+
+  snap.forEach(doc=>{
+    const a = doc.data();
+    const dateObj = a.timestamp?.toDate();
+    const formattedDate = dateObj
+      ? dateObj.toLocaleString("en-US", { dateStyle:"medium", timeStyle:"short", hour12:true })
+      : "";
+
+    grid.innerHTML += `
+      <div class="card">
+        <h4>${a.title}</h4>
+        <small>${formattedDate}</small>
+        ${a.image ? `<img src="${a.image}" alt="Announcement Image" onclick="openModal('${a.image}')">` : ""}
+        <p>${a.description}</p>
+      </div>
+    `;
+  });
+}
+
+loadAnnouncements();
+</script>
+
+<script>
+/* BACKGROUND SHAPES */
+const bg=document.getElementById("bg");
+for(let i=0;i<30;i++){
+  const s=document.createElement("div");
+  s.className="shape";
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=(6+Math.random()*6)+"s";
+  s.style.opacity=Math.random();
+  bg.appendChild(s);
+}
+</script>
+
+</body>
+</html>

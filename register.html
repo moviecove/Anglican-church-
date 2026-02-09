@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Church of the Holy Spirit | Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase v8 (compat) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+</head>
+<body style="margin:0;font-family:Arial;background:#576e45;color:#aac64b;overflow:hidden;">
+
+<div id="cross-container"></div>
+
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;">
+
+<div style="
+background: rgba(255,255,255,0.08);
+backdrop-filter:blur(10px);
+padding:30px;
+border-radius:15px;
+width:90%;
+max-width:380px;
+text-align:center;
+">
+
+<img src="logo.png" style="width:80px;">
+<h2>Join the Church</h2>
+
+<button onclick="registerGoogle()" class="btn social">
+<i class="fab fa-google"></i> Register with Google
+</button>
+
+<button onclick="registerFacebook()" class="btn social">
+<i class="fab fa-facebook"></i> Register with Facebook
+</button>
+
+<div style="margin:15px 0;">OR</div>
+
+<input id="email" placeholder="Email" class="input">
+<input id="password" placeholder="Password" type="password" class="input">
+
+<button onclick="registerEmail()" class="btn primary">Register</button>
+
+<p style="font-size:13px;margin-top:15px;">
+Already a member? <a href="login.html" style="color:#aac64b;">Login</a>
+</p>
+
+</div>
+</div>
+
+<script>
+  // 🔹 Firebase Initialization v8
+  firebase.initializeApp({
+    apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+    authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+    projectId: "church-of-the-holy-spiri-dcdf3",
+    storageBucket: "church-of-the-holy-spiri-dcdf3.firebasestorage.app",
+    messagingSenderId: "926358296297",
+    appId: "1:926358296297:web:31439032719a21e7830278",
+    measurementId: "G-FTYLC0P9GR"
+  });
+
+  const auth = firebase.auth();
+  const db = firebase.firestore(); // Optional if you later want to store user info
+
+  function registerEmail(){
+    glow(event.target);
+    auth.createUserWithEmailAndPassword(
+      document.getElementById("email").value,
+      document.getElementById("password").value
+    )
+    .then(()=>alert("Registered successfully"))
+    .catch(e=>alert(e.message));
+  }
+
+  function registerGoogle(){
+    glow(event.target);
+    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+  }
+
+  function registerFacebook(){
+    glow(event.target);
+    auth.signInWithPopup(new firebase.auth.FacebookAuthProvider());
+  }
+
+  function glow(btn){
+    btn.style.boxShadow="0 0 25px #4fc3f7";
+    setTimeout(()=>btn.style.boxShadow="none",300);
+  }
+
+  /* CROSSES */
+  const container=document.getElementById("cross-container");
+  for(let i=0;i<40;i++){
+    let c=document.createElement("div");
+    c.innerHTML="✝";
+    c.style.cssText=`
+      position:absolute;
+      top:-10%;
+      left:${Math.random()*100}%;
+      font-size:${10+Math.random()*18}px;
+      opacity:0.15;
+      animation:fall ${6+Math.random()*6}s linear infinite;
+    `;
+    container.appendChild(c);
+  }
+</script>
+
+<style>
+@keyframes fall{to{transform:translateY(120vh);}}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;margin-top:10px;}
+.primary{background:#ccd4c9;}
+.social{background:#fff;color:#000;}
+.input{width:100%;padding:12px;margin-top:10px;border-radius:8px;border:none;}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Events | Church of the Holy Spirit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#576e45;
+  color:#ccd4c9;
+  overflow-x:hidden;
+}
+
+/* HEADER */
+header{
+  background:#232d26;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+header img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+header span{
+  font-size:18px;
+  font-weight:bold;
+  color:#aac64b;
+}
+
+/* CONTAINER */
+.container{ padding:15px; }
+
+/* TITLE */
+.page-title{
+  font-size:20px;
+  margin-bottom:12px;
+  color:#aac64b;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:15px;
+}
+
+/* CARD */
+.card{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+  transition:transform .3s, box-shadow .3s;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 20px rgba(0,0,0,.3);
+}
+.card img{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+}
+.card h4{
+  margin:0 0 6px;
+  color:#aac64b;
+}
+.card p{
+  font-size:14px;
+  color:#ccd4c9;
+  line-height:1.5;
+}
+.meta{
+  font-size:13px;
+  color:#899c6f;
+  margin-bottom:6px;
+}
+.meta i{
+  margin-right:6px;
+  color:#aac64b;
+}
+
+/* SKELETON */
+.skeleton{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+}
+.skeleton-title,.skeleton-line{
+  border-radius:6px;
+  background:linear-gradient(
+    90deg,#6b746b 25%,#899c6f 37%,#6b746b 63%
+  );
+  background-size:400% 100%;
+  animation:shimmer 1.4s infinite;
+}
+.skeleton-title{height:14px;width:70%;margin-bottom:10px;}
+.skeleton-line{height:10px;width:100%;margin-bottom:8px;}
+@keyframes shimmer{
+  0%{background-position:100% 0;}
+  100%{background-position:-100% 0;}
+}
+
+/* BACKGROUND SHAPES */
+.bg{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  overflow:hidden;
+}
+.shape{
+  position:absolute;
+  width:18px;
+  height:18px;
+  background:rgba(204,212,201,0.06);
+  transform:rotate(45deg);
+  animation:float 9s linear infinite;
+}
+@keyframes float{
+  from{transform:translateY(-120px) rotate(45deg);}
+  to{transform:translateY(110vh) rotate(45deg);}
+}
+
+/* 🔥 FULLSCREEN IMAGE VIEWER */
+#imageViewer{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+#imageViewer img{
+  max-width:90%;
+  max-height:85%;
+  border-radius:12px;
+  animation:zoom .25s ease;
+}
+@keyframes zoom{
+  from{transform:scale(.8);opacity:0;}
+  to{transform:scale(1);opacity:1;}
+}
+#closeViewer{
+  position:absolute;
+  top:15px;
+  right:20px;
+  font-size:28px;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- FULLSCREEN IMAGE VIEW -->
+<div id="imageViewer" onclick="closeViewer()">
+  <i id="closeViewer" class="fa fa-times"></i>
+  <img id="viewerImg">
+</div>
+
+<div class="bg" id="bg"></div>
+
+<header>
+  <img src="logo.png">
+  <span>Church of the Holy Spirit</span>
+</header>
+
+<div class="container">
+  <div class="page-title">Upcoming Events</div>
+
+  <div class="grid" id="skeleton">
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  </div>
+
+  <div class="grid" id="eventGrid" style="display:none"></div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  storageBucket: "church-of-the-holy-spiri-dcdf3.firebasestorage.app",
+  messagingSenderId: "926358296297",
+  appId: "1:926358296297:web:31439032719a21e7830278"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const grid = document.getElementById("eventGrid");
+const skeleton = document.getElementById("skeleton");
+
+function formatDate(ts){
+  return ts?.toDate().toLocaleString("en-NG",{
+    weekday:"short",month:"short",day:"numeric",
+    year:"numeric",hour:"numeric",minute:"2-digit",hour12:true
+  });
+}
+
+async function loadEvents(){
+  const q = query(collection(db,"events"), orderBy("date","desc"));
+  const snap = await getDocs(q);
+
+  skeleton.style.display="none";
+  grid.style.display="grid";
+
+  snap.forEach(doc=>{
+    const e = doc.data();
+    grid.innerHTML += `
+      <div class="card">
+        ${e.image ? `<img src="${e.image}" onclick="openViewer('${e.image}')">` : ``}
+        <h4>${e.title}</h4>
+        <div class="meta"><i class="fa fa-calendar"></i>${formatDate(e.date)}</div>
+        <p>${e.description || ""}</p>
+      </div>
+    `;
+  });
+}
+loadEvents();
+</script>
+
+<script>
+/* IMAGE VIEWER */
+function openViewer(src){
+  document.getElementById("viewerImg").src = src;
+  document.getElementById("imageViewer").style.display="flex";
+}
+function closeViewer(){
+  document.getElementById("imageViewer").style.display="none";
+}
+
+/* BACKGROUND SHAPES */
+const bg=document.getElementById("bg");
+for(let i=0;i<30;i++){
+  const s=document.createElement("div");
+  s.className="shape";
+  s.style.left=Math.random()*100+"%";
+  s.style.animationDuration=(6+Math.random()*6)+"s";
+  s.style.opacity=Math.random();
+  bg.appendChild(s);
+}
+</script>
+
+</body>
+</html>

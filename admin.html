@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+/* ===== STYLES KEPT EXACTLY AS YOURS ===== */
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#576e45;
+  color:#fff;
+}
+header{
+  padding:15px;
+  background:#576e45;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+header span{font-size:18px;font-weight:bold;}
+header button{
+  background:#232d26;
+  border:none;
+  padding:8px 12px;
+  border-radius:6px;
+  color:#fff;
+  cursor:pointer;
+}
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+.section{
+  background:#899c6f;
+  padding:20px;
+  border-radius:12px;
+  margin-bottom:25px;
+}
+h2{margin-top:0;font-size:18px;}
+input,textarea,button{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:8px;
+}
+input,textarea{background:#0f172a;color:#fff;}
+button{
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+}
+button:hover{background:#1d4ed8;}
+.item{
+  background:#0f172a;
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.delete-btn{
+  background:#ff4d4d;
+  padding:6px 10px;
+  border-radius:6px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* Modal */
+#modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+.modal-box{
+  background:#576e45;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:300px;
+  text-align:center;
+}
+.modal-box button{
+  width:48%;
+  padding:8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <span>Admin Dashboard</span>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container" id="adminUI" style="display:none">
+<!-- ===== ALL SECTIONS KEPT AS YOURS ===== -->
+<!-- MEDIA -->
+<div class="section">
+<h2>Upload Media</h2>
+<input type="file" id="mediaFile">
+<input type="text" id="mediaTitle" placeholder="Media Title">
+<input type="text" id="mediaLink" placeholder="Or paste media link (optional)">
+<select id="mediaType">
+  <option value="image">Image</option>
+  <option value="video">Video</option>
+  <option value="audio">Audio</option>
+</select>
+<button onclick="uploadMedia()">Upload</button>
+<div id="mediaList"></div>
+</div>
+
+<!-- SERMON -->
+<div class="section">
+<h2>Upload Sermon (Audio)</h2>
+<input type="file" accept="audio/*" id="audioFile">
+<input type="text" id="sermonTitle" placeholder="Sermon title">
+<button onclick="uploadSermon()">Upload Sermon</button>
+<div id="sermonList"></div>
+</div>
+
+<!-- DEVOTIONAL -->
+<div class="section">
+<h2>Devotionals</h2>
+<input type="text" id="devTitle" placeholder="Title">
+<textarea id="devContent" rows="4" placeholder="Devotional content"></textarea>
+<button onclick="uploadDevotional()">Publish</button>
+<div id="devList"></div>
+</div>
+
+<!-- ANNOUNCEMENTS -->
+<div class="section">
+<h2>Announcements</h2>
+<input type="text" id="annTitle" placeholder="Announcement title">
+<textarea id="annContent" rows="4" placeholder="Content"></textarea>
+<button onclick="uploadAnnouncement()">Publish</button>
+<div id="annList"></div>
+</div>
+
+<!-- EVENTS -->
+<div class="section">
+<h2>Events</h2>
+<input type="text" id="eventTitle" placeholder="Event title">
+<textarea id="eventContent" rows="4" placeholder="Event description"></textarea>
+<input type="date" id="eventDate">
+<button onclick="uploadEvent()">Publish</button>
+<div id="eventList"></div>
+</div>
+
+</div>
+
+<!-- DELETE MODAL -->
+<div id="modal">
+  <div class="modal-box">
+    <p>Delete this item?</p>
+    <div style="display:flex;justify-content:space-between">
+      <button onclick="confirmDelete()">Yes</button>
+      <button style="background:#334155" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+// ===== YOUR FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  storageBucket: "church-of-the-holy-spiri-dcdf3.appspot.com",
+  appId: "1:926358296297:web:31439032719a21e7830278",
+  measurementId: "G-FTYLC0P9GR"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+const BACKEND = "https://anglican-church-pin-backend.onrender.com";
+let deleteAction = null;
+
+// ===== PIN CHECK =====
+(async function(){
+  try {
+    const pin = prompt("Enter Admin PIN");
+    if(!pin){ location="dashboard.html"; return; }
+    const res = await fetch(`${BACKEND}/check-pin`,{
+      method:"POST",
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pin})
+    });
+    const data = await res.json();
+    if(!data.success){ alert("Wrong PIN"); location="dashboard.html"; return; }
+    sessionStorage.setItem("admin","true");
+    document.getElementById("adminUI").style.display="block";
+    loadAll();
+  } catch(err){
+    alert("Error connecting to backend. Try again later.");
+    location="dashboard.html";
+  }
+})();
+
+// ===== LOGOUT =====
+window.logout = function(){
+  sessionStorage.removeItem("admin");
+  location="dashboard.html";
+}
+
+// ===== DELETE MODAL =====
+window.confirmDelete = function(){ deleteAction(); closeModal(); }
+window.closeModal = function(){ document.getElementById("modal").style.display="none"; }
+
+// ===== UPLOAD FUNCTIONS =====
+window.uploadMedia = async function(){
+  const file = mediaFile.files[0];
+  const title = mediaTitle.value;
+  const type = mediaType.value;
+  let url = mediaLink.value;
+
+  if(file){
+    const r = ref(storage,"media/"+Date.now()+"_"+file.name);
+    await uploadBytes(r,file);
+    url = await getDownloadURL(r);
+  }
+  await addDoc(collection(db,"media"),{title,url,type,thumbnail:url});
+  loadMedia();
+}
+
+window.uploadSermon = async function(){
+  const file = audioFile.files[0];
+  if(!file)return alert("Select audio");
+  const r = ref(storage,"sermons/"+Date.now()+"_"+file.name);
+  await uploadBytes(r,file);
+  const url = await getDownloadURL(r);
+  await addDoc(collection(db,"sermons"),{title:sermonTitle.value,url});
+  loadSermons();
+}
+
+window.uploadDevotional = async function(){
+  await addDoc(collection(db,"devotionals"),{
+    title:devTitle.value,
+    content:devContent.value,
+    date:new Date().toISOString()
+  });
+  loadDevotionals();
+}
+
+window.uploadAnnouncement = async function(){
+  await addDoc(collection(db,"announcements"),{
+    title:annTitle.value,
+    content:annContent.value,
+    date:new Date().toISOString()
+  });
+  loadAnnouncements();
+}
+
+window.uploadEvent = async function(){
+  await addDoc(collection(db,"events"),{
+    title:eventTitle.value,
+    content:eventContent.value,
+    date:eventDate.value
+  });
+  loadEvents();
+}
+
+// ===== LOAD FUNCTIONS =====
+async function loadMedia(){
+  mediaList.innerHTML="";
+  const snap = await getDocs(collection(db,"media"));
+  snap.forEach(d=>{
+    mediaList.innerHTML+=`
+      <div class="item">
+        <span>${d.data().title || "Media"}</span>
+        <button class="delete-btn" onclick="openDelete(()=>deleteDoc(doc(db,'media','${d.id}')).then(loadMedia))">Delete</button>
+      </div>`;
+  });
+}
+
+async function loadSermons(){
+  sermonList.innerHTML="";
+  const snap = await getDocs(collection(db,"sermons"));
+  snap.forEach(d=>{
+    sermonList.innerHTML+=`
+      <div class="item">
+        <span>${d.data().title}</span>
+        <button class="delete-btn" onclick="openDelete(()=>deleteDoc(doc(db,'sermons','${d.id}')).then(loadSermons))">Delete</button>
+      </div>`;
+  });
+}
+
+async function loadDevotionals(){
+  devList.innerHTML="";
+  const snap = await getDocs(collection(db,"devotionals"));
+  snap.forEach(d=>{
+    devList.innerHTML+=`
+      <div class="item">
+        <span>${d.data().title}</span>
+        <button class="delete-btn" onclick="openDelete(()=>deleteDoc(doc(db,'devotionals','${d.id}')).then(loadDevotionals))">Delete</button>
+      </div>`;
+  });
+}
+
+async function loadAnnouncements(){
+  annList.innerHTML="";
+  const snap = await getDocs(collection(db,"announcements"));
+  snap.forEach(d=>{
+    annList.innerHTML+=`
+      <div class="item">
+        <span>${d.data().title}</span>
+        <button class="delete-btn" onclick="openDelete(()=>deleteDoc(doc(db,'announcements','${d.id}')).then(loadAnnouncements))">Delete</button>
+      </div>`;
+  });
+}
+
+async function loadEvents(){
+  eventList.innerHTML="";
+  const snap = await getDocs(collection(db,"events"));
+  snap.forEach(d=>{
+    eventList.innerHTML+=`
+      <div class="item">
+        <span>${d.data().title}</span>
+        <button class="delete-btn" onclick="openDelete(()=>deleteDoc(doc(db,'events','${d.id}')).then(loadEvents))">Delete</button>
+      </div>`;
+  });
+}
+
+function loadAll(){
+  loadMedia();
+  loadSermons();
+  loadDevotionals();
+  loadAnnouncements();
+  loadEvents();
+}
+
+window.openDelete = function(cb){
+  deleteAction = cb;
+  document.getElementById("modal").style.display="flex";
+}
+</script>
+
+</body>
+</html>

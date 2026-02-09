@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Prayer Requests | Church of the Holy Spirit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+<body style="
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#576e45;
+color:#fff;
+overflow-y:auto;
+">
+
+<!-- FALLING CROSSES -->
+<div id="cross-container" style="
+position:fixed;
+inset:0;
+z-index:1;
+pointer-events:none;
+"></div>
+
+<!-- HEADER -->
+<div style="
+padding:15px;
+display:flex;
+align-items:center;
+gap:10px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(8px);
+position:relative;
+z-index:2;
+">
+  <img src="logo.png" style="width:45px;">
+  <div>
+    <strong>Church of the Holy Spirit Rumouke</strong><br>
+    <small style="opacity:0.7;">Prayer Requests</small>
+  </div>
+</div>
+
+<!-- PRAYER FORM -->
+<div style="
+padding:20px;
+position:relative;
+z-index:2;
+max-width:500px;
+margin:auto;
+text-align:center;
+">
+
+<h2>Submit a Prayer Request</h2>
+
+<input id="prayerTitle" type="text" placeholder="Title" style="
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:none;
+outline:none;
+">
+
+<textarea id="prayerMessage" placeholder="Your prayer request" style="
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:none;
+outline:none;
+height:120px;
+resize:none;
+"></textarea>
+
+<input id="userEmail" type="email" placeholder="Your email (optional)" style="
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+border:none;
+outline:none;
+">
+
+<button id="sendEmailBtn" style="
+padding:12px 20px;
+border:none;
+border-radius:8px;
+background:#aac64b;
+color:#232d26;
+cursor:pointer;
+transition:0.3s;
+font-size:16px;
+margin-top:10px;
+">
+<i class="fas fa-paper-plane"></i> Submit Prayer Request
+</button>
+
+<p id="feedback" style="margin-top:10px;opacity:0.8;"></p>
+
+<button id="backBtn" style="
+margin-top:20px;
+padding:10px 18px;
+border:none;
+border-radius:8px;
+background:#232d26;
+color:#fff;
+cursor:pointer;
+transition:0.3s;
+font-size:14px;
+">
+<i class="fas fa-arrow-left"></i> Back to Dashboard
+</button>
+
+</div>
+
+<script>
+// Falling crosses
+const container = document.getElementById("cross-container");
+for(let i=0;i<45;i++){
+  let c = document.createElement("div");
+  c.innerHTML="✝";
+  c.style.cssText=`
+    position:absolute;
+    top:-10%;
+    left:${Math.random()*100}%;
+    font-size:${12+Math.random()*20}px;
+    opacity:0.15;
+    animation:fall ${5+Math.random()*5}s linear infinite;
+  `;
+  container.appendChild(c);
+}
+
+// Send via default email app
+document.getElementById("sendEmailBtn").addEventListener("click", ()=>{
+  const btn = document.getElementById("sendEmailBtn");
+  btn.style.boxShadow="0 0 25px #4fc3f7";
+  setTimeout(()=>btn.style.boxShadow="none",300);
+
+  const title = document.getElementById("prayerTitle").value.trim();
+  const message = document.getElementById("prayerMessage").value.trim();
+  const userEmail = document.getElementById("userEmail").value.trim();
+
+  if(!title || !message){
+    document.getElementById("feedback").innerText = "Please fill out the title and message!";
+    return;
+  }
+
+  const churchEmail = "churchemail@gmail.com"; // replace with your church email
+  let body = message;
+  if(userEmail) body += `\n\nFrom: ${userEmail}`;
+
+  const mailtoLink = `mailto:${churchEmail}?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
+});
+
+// Back button
+document.getElementById("backBtn").addEventListener("click", ()=>{
+  const btn = document.getElementById("backBtn");
+  btn.style.boxShadow="0 0 25px #ff6b6b";
+  setTimeout(()=>btn.style.boxShadow="none",300);
+  window.location="dashboard.html";
+});
+</script>
+
+<style>
+@keyframes fall { to { transform: translateY(120vh); } }
+</style>
+</body>
+</html>

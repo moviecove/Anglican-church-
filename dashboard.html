@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Church Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Font Awesome -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+
+<body style="
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:#576e45;
+color:#fff;
+overflow-y:auto;
+">
+
+<!-- FALLING CROSSES -->
+<div id="cross-container" style="
+position:fixed;
+inset:0;
+z-index:1;
+pointer-events:none;
+"></div>
+
+<!-- HEADER -->
+<div style="
+padding:15px;
+display:flex;
+align-items:center;
+gap:10px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(8px);
+position:relative;
+z-index:2;
+">
+  <img src="logo.png" style="width:45px;">
+  <div>
+    <strong>Church of the Holy Spirit</strong><br><strong>Rumouke</strong><br>
+    <small style="opacity:0.7;">Member Dashboard</small>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD GRID -->
+<div style="
+padding:20px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+gap:15px;
+position:relative;
+z-index:2;
+">
+
+<div class="card" onclick="go('profile.html')">
+<i class="fas fa-user"></i>
+<span>Profile</span>
+</div>
+
+<div class="card" onclick="go('prayer.html')">
+<i class="fas fa-hands-praying"></i>
+<span>Prayer Requests</span>
+</div>
+
+<div class="card" onclick="go('donations.html')">
+<i class="fas fa-donate"></i>
+<span>Donations</span>
+</div>
+
+<div class="card" onclick="go('media.html')">
+<i class="fas fa-photo-video"></i>
+<span>Media</span>
+</div>
+
+<div class="card" onclick="go('events.html')">
+<i class="fas fa-calendar"></i>
+<span>Events</span>
+</div>
+
+<div class="card" onclick="go('announcements.html')">
+<i class="fas fa-bullhorn"></i>
+<span>Announcements</span>
+</div>
+
+<!-- Admin card: just redirect to admin page -->
+<div class="card" id="adminCard">
+<i class="fas fa-shield-halved"></i>
+<span>Admin</span>
+</div>
+
+
+</div>
+
+<script>
+// Firebase config
+firebase.initializeApp({
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  storageBucket: "church-of-the-holy-spiri-dcdf3.firebasestorage.app",
+  messagingSenderId: "926358296297",
+  appId: "1:926358296297:web:31439032719a21e7830278",
+  measurementId: "G-FTYLC0P9GR"
+});
+
+const auth = firebase.auth();
+
+// Auth check
+auth.onAuthStateChanged(user => {
+  if(!user){
+    window.location="login.html";
+  }
+});
+
+// Navigation
+function go(page){
+  glow(event.currentTarget);
+  setTimeout(()=>window.location=page,200);
+}
+
+// Admin redirect only
+const adminCard = document.getElementById("adminCard");
+adminCard.addEventListener("click", ()=>{
+  glow(adminCard);
+  window.location="admin.html"; // PIN checked inside admin.html
+});
+
+// Logout
+function logout(){
+  auth.signOut().then(()=>window.location="login.html");
+}
+
+// Button glow
+function glow(el){
+  el.style.boxShadow="0 0 25px #4fc3f7";
+  setTimeout(()=>el.style.boxShadow="none",300);
+}
+
+// Falling crosses
+const container=document.getElementById("cross-container");
+for(let i=0;i<45;i++){
+ let c=document.createElement("div");
+ c.innerHTML="✝";
+ c.style.cssText=`
+ position:absolute;
+ top:-10%;
+ left:${Math.random()*100}%;
+ font-size:${12+Math.random()*20}px;
+ opacity:0.15;
+ animation:fall ${5+Math.random()*5}s linear infinite;
+ `;
+ container.appendChild(c);
+}
+</script>
+
+<style>
+@keyframes fall {
+ to { transform: translateY(120vh); }
+}
+
+/* Dashboard cards */
+.card{
+background:rgba(255,255,255,0.08);
+border-radius:14px;
+padding:20px;
+text-align:center;
+cursor:pointer;
+transition:0.3s;
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:10px;
+}
+.card i{
+font-size:26px;
+color:#232d26;
+}
+.card span{
+font-size:14px;
+}
+.card:hover{
+transform:translateY(-4px);
+}
+.logout i{color:#ff6b6b;}
+</style>
+
+</body>
+</html>
