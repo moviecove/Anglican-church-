@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Church Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Font Awesome -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#576e45;
+  color:#fff;
+  overflow-y:auto;
+}
+
+/* Header */
+header{
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(8px);
+}
+header img{ width:45px; }
+header div strong{ display:block; }
+header small{ opacity:0.7; }
+
+/* Dashboard Grid */
+.dashboard-grid{
+  padding:20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:20px;
+}
+
+/* Cards */
+.card{
+  background:rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:25px;
+  text-align:center;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  transform:translateY(20px);
+  opacity:0;
+  animation:cardEntrance 0.6s forwards;
+  transition:0.3s;
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+.card i{
+  font-size:28px;
+  color:#232d26;
+  transition:0.3s;
+}
+.card span{
+  font-size:14px;
+  font-weight:600;
+}
+.card:hover{
+  transform:translateY(-6px) scale(1.05);
+  box-shadow:0 10px 25px rgba(0,0,0,0.25);
+}
+.card:hover i{
+  color:#AAC64B;
+  transform:scale(1.2);
+}
+
+/* Entrance animation for cards with delay */
+@keyframes cardEntrance{
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+}
+</style>
+</head>
+
+<body>
+
+
+
+<!-- HEADER -->
+<header>
+  <img src="logo.png">
+  <div>
+    <strong>Church of the Holy Spirit</strong>
+    <strong>Rumouke</strong>
+    <small>Member Dashboard</small>
+  </div>
+</header>
+
+<!-- DASHBOARD GRID -->
+<div class="dashboard-grid" id="dashboardGrid">
+  <div class="card" onclick="go('profile.html')">
+    <i class="fas fa-user"></i>
+    <span>Profile</span>
+  </div>
+
+  <div class="card" onclick="go('prayer.html')">
+    <i class="fas fa-hands-praying"></i>
+    <span>Prayer Requests</span>
+  </div>
+
+  <div class="card" onclick="go('donations.html')">
+    <i class="fas fa-donate"></i>
+    <span>Donations</span>
+  </div>
+
+  <div class="card" onclick="go('media.html')">
+    <i class="fas fa-photo-video"></i>
+    <span>Media</span>
+  </div>
+
+  <div class="card" onclick="go('events.html')">
+    <i class="fas fa-calendar"></i>
+    <span>Events</span>
+  </div>
+
+  <div class="card" onclick="go('announcements.html')">
+    <i class="fas fa-bullhorn"></i>
+    <span>Announcements</span>
+  </div>
+
+  <!-- Admin card -->
+  <div class="card" id="adminCard">
+    <i class="fas fa-shield-halved"></i>
+    <span>Admin</span>
+  </div>
+</div>
+
+<script>
+// Firebase config
+firebase.initializeApp({
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  storageBucket: "church-of-the-holy-spiri-dcdf3.firebasestorage.app",
+  messagingSenderId: "926358296297",
+  appId: "1:926358296297:web:31439032719a21e7830278",
+  measurementId: "G-FTYLC0P9GR"
+});
+
+const auth = firebase.auth();
+
+// Auth check
+auth.onAuthStateChanged(user => {
+  if(!user){
+    window.location="login.html";
+  }
+});
+
+// Navigation
+function go(page){
+  glow(event.currentTarget);
+  setTimeout(()=>window.location=page,200);
+}
+
+// Admin redirect only
+const adminCard = document.getElementById("adminCard");
+adminCard.addEventListener("click", ()=>{
+  glow(adminCard);
+  setTimeout(()=>window.location="admin.html", 200);
+});
+
+// Button glow
+function glow(el){
+  el.style.boxShadow="0 0 25px #AAC64B";
+  setTimeout(()=>el.style.boxShadow="none",300);
+}
+</script>
+
+<style>
+@keyframes fall {
+ to { transform: translateY(120vh); }
+}
+
+/* Optional: stagger card entrance animation */
+.dashboard-grid .card:nth-child(1){animation-delay:0.05s;}
+.dashboard-grid .card:nth-child(2){animation-delay:0.15s;}
+.dashboard-grid .card:nth-child(3){animation-delay:0.25s;}
+.dashboard-grid .card:nth-child(4){animation-delay:0.35s;}
+.dashboard-grid .card:nth-child(5){animation-delay:0.45s;}
+.dashboard-grid .card:nth-child(6){animation-delay:0.55s;}
+.dashboard-grid .card:nth-child(7){animation-delay:0.65s;}
+</style>
+
+</body>
+</html>

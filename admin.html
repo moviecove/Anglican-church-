@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#576e45;color:#fff}
+header{padding:15px;background:#576e45;display:flex;justify-content:space-between;align-items:center}
+header button{background:#232d26;border:none;padding:8px 12px;border-radius:6px;color:#fff;cursor:pointer}
+.container{max-width:1100px;margin:auto;padding:15px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:15px}
+.card{background:#899c6f;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;animation:fade .4s}
+.card h2{margin:0;color:#AAC64B}
+.card input,.card textarea,.card select{padding:10px;border-radius:8px;border:none;background:#0f172a;color:#fff}
+.card button{padding:10px;border:none;border-radius:8px;background:#232d26;color:#fff;cursor:pointer}
+.card-list{display:flex;flex-direction:column;gap:6px}
+.item{background:#0f172a;padding:8px;border-radius:8px;display:flex;justify-content:space-between}
+.delete-btn{background:#ff4d4d;border:none;padding:5px 8px;border-radius:6px;color:#fff;cursor:pointer}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;justify-content:center;align-items:center}
+.modal-box{background:#576e45;padding:20px;border-radius:14px;text-align:center}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+@media(max-width:600px){.container{grid-template-columns:1fr}}
+</style>
+</head>
+
+<body>
+
+<header>
+  <span>Admin Dashboard</span>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="container" id="adminUI" style="display:none">
+
+<div class="card">
+  <h2>Media</h2>
+  <input id="mediaTitle" placeholder="Title">
+  <input id="mediaLink" placeholder="URL">
+  <select id="mediaType">
+    <option>image</option><option>video</option><option>livestream</option>
+  </select>
+  <button onclick="saveItem('media')">Upload</button>
+  <div class="card-list" id="mediaList"></div>
+</div>
+
+<div class="card">
+  <h2>Sermons</h2>
+  <input id="sermonTitle" placeholder="Title">
+  <input id="sermonLink" placeholder="Audio URL">
+  <button onclick="saveItem('sermons')">Upload</button>
+  <div class="card-list" id="sermonsList"></div>
+</div>
+
+<div class="card">
+  <h2>Devotionals</h2>
+  <input id="devTitle" placeholder="Title">
+  <textarea id="devContent"></textarea>
+  <button onclick="saveItem('devotionals')">Publish</button>
+  <div class="card-list" id="devotionalsList"></div>
+</div>
+
+<div class="card">
+  <h2>Announcements</h2>
+  <input id="annTitle" placeholder="Title">
+  <textarea id="annContent"></textarea>
+  <input id="annLink" placeholder="Optional URL">
+  <button onclick="saveItem('announcements')">Publish</button>
+  <div class="card-list" id="announcementsList"></div>
+</div>
+
+<div class="card">
+  <h2>Events</h2>
+  <input id="eventTitle" placeholder="Title">
+  <textarea id="eventContent"></textarea>
+  <input type="date" id="eventDate">
+  <button onclick="saveItem('events')">Publish</button>
+  <div class="card-list" id="eventsList"></div>
+</div>
+
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <p>Delete item?</p>
+    <button onclick="confirmDelete()">Yes</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const adminUI=document.getElementById("adminUI");
+let deleteAction=null;
+
+/* PIN CHECK */
+(async()=>{
+  const pin=prompt("Enter Admin PIN");
+  if(!pin) return location="dashboard.html";
+  try{
+    const r=await fetch("https://anglican-church-pin-backend.onrender.com/check-pin",{
+      method:"POST",headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({pin})
+    });
+    const d=await r.json();
+    if(!d.success) return alert("Wrong PIN"),location="dashboard.html";
+    adminUI.style.display="grid";
+    loadAll();
+  }catch{alert("PIN server error");location="dashboard.html"}
+})();
+
+function logout(){location="dashboard.html"}
+
+async function saveItem(section){
+  const map={
+    media:['mediaTitle','mediaLink'],
+    sermons:['sermonTitle','sermonLink'],
+    devotionals:['devTitle','devContent'],
+    announcements:['annTitle','annContent'],
+    events:['eventTitle','eventContent']
+  };
+  const [t,c]=map[section];
+  const title=document.getElementById(t).value;
+  const content=document.getElementById(c).value;
+  if(!title||!content) return alert("Fill all fields");
+
+  const payload={id:Date.now().toString(),title,content,
+    date:section==='events'?eventDate.value:new Date().toISOString(),
+    link:section==='announcements'?annLink.value:''};
+
+  const r=await fetch("saveJSON.php",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({section,payload})});
+  render(section,await r.json());
+}
+
+async function loadAll(){
+  for(const s of ['media','sermons','devotionals','announcements','events']){
+    const r=await fetch(`loadJSON.php?section=${s}`);
+    render(s,await r.json());
+  }
+}
+
+function render(section,data){
+  const box=document.getElementById(section+"List");
+  box.innerHTML="";
+  data.forEach(i=>{
+    box.innerHTML+=`<div class="item">
+      <span>${i.title}</span>
+      <button class="delete-btn" onclick="askDelete('${section}','${i.id}')">Delete</button>
+    </div>`;
+  });
+}
+
+function askDelete(section,id){
+  deleteAction=async()=>{
+    const r=await fetch("deleteJSON.php",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({section,id})});
+    render(section,await r.json());
+  };
+  modal.style.display="flex";
+}
+function confirmDelete(){deleteAction();closeModal()}
+function closeModal(){modal.style.display="none"}
+</script>
+
+</body>
+</html>
