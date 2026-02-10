@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Church of the Holy Spirit Rumouke</title>
+<style>
+/* ================= BODY ================= */
+body{
+  margin:0;
+  padding:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#576e45;
+  color:#CCD4C9;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+/* ================= SPLASH ================= */
+#splash{
+  position:relative;
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ================= LOGO WITH PULSE & ROTATION ================= */
+#logo{
+  width:140px;
+  height:140px;
+  opacity:0;
+  transform:scale(0) rotateY(0deg);
+  animation:logoIntro 2s forwards cubic-bezier(0.65,0,0.35,1);
+  position:relative;
+  z-index:2;
+}
+
+#logo::after{
+  content:'';
+  position:absolute;
+  width:160px;
+  height:160px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(170,198,75,0.6) 0%, rgba(170,198,75,0) 70%);
+  top:-10px;
+  left:-10px;
+  filter:blur(20px);
+  opacity:0;
+  animation:glow 2s forwards;
+  z-index:-1;
+}
+
+@keyframes logoIntro{
+  0%{opacity:0; transform:scale(0) rotateY(0deg);}
+  50%{opacity:1; transform:scale(1.3) rotateY(180deg);}
+  100%{opacity:1; transform:scale(1) rotateY(360deg);}
+}
+
+@keyframes glow{
+  0%{opacity:0; transform:scale(0);}
+  50%{opacity:0.8; transform:scale(1.5);}
+  100%{opacity:0.6; transform:scale(1);}
+}
+
+/* ================= TEXT ================= */
+h1{
+  font-size:2.8rem;
+  color:#AAC64B;
+  margin:15px 0 5px;
+  opacity:0;
+  transform:translateY(30px);
+  animation:textIntro 1s forwards;
+  animation-delay:2.2s;
+}
+
+p{
+  font-size:1.3rem;
+  color:#CCD4C9;
+  margin:0 0 20px;
+  opacity:0;
+  transform:translateY(30px);
+  animation:textIntro 1s forwards;
+  animation-delay:2.5s;
+}
+
+#entering{
+  font-weight:bold;
+  color:#AAC64B;
+  letter-spacing:2px;
+  opacity:0;
+  transform:translateY(20px);
+  animation:textIntro 1s forwards;
+  animation-delay:2.8s;
+}
+
+@keyframes textIntro{
+  0%{opacity:0; transform:translateY(30px);}
+  100%{opacity:1; transform:translateY(0);}
+}
+
+/* ================= PARTICLES ================= */
+.particle{
+  position:absolute;
+  border-radius:50%;
+  background:#AAC64B;
+  opacity:0;
+  pointer-events:none;
+  animation:particleAnim linear infinite;
+}
+
+@keyframes particleAnim{
+  0%{transform:translateY(0) scale(0.5); opacity:0.2;}
+  50%{opacity:0.6;}
+  100%{transform:translateY(-250px) scale(1); opacity:0;}
+}
+
+/* ================= SPLASH ZOOM OUT ================= */
+#splash.zoomOut{
+  animation:zoomOut 1s forwards;
+  animation-delay:7s; /* start zoom out after 7s */
+}
+
+@keyframes zoomOut{
+  0%{transform:scale(1);}
+  100%{transform:scale(1.3); opacity:0;}
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:600px){
+  h1{font-size:2rem;}
+  p{font-size:1rem;}
+  #entering{font-size:1.2rem;}
+  #logo{width:100px; height:100px;}
+  #logo::after{width:120px; height:120px; top:-10px; left:-10px;}
+}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <img id="logo" src="logo.png" alt="Church Logo">
+  <h1>Church of the Holy Spirit</h1>
+  <p>Rumouke</p>
+  <div id="entering">Entering...</div>
+</div>
+
+<script>
+const splash = document.getElementById('splash');
+
+// Generate subtle glowing particles
+for(let i=0;i<40;i++){
+  const p = document.createElement('div');
+  p.className='particle';
+  const size = Math.random()*8 + 4;
+  p.style.width = size + 'px';
+  p.style.height = size + 'px';
+  p.style.left = Math.random()*100 + 'vw';
+  p.style.top = Math.random()*100 + 'vh';
+  p.style.animationDuration = (4 + Math.random()*3) + 's';
+  p.style.animationDelay = (Math.random()*3) + 's';
+  document.body.appendChild(p);
+}
+
+// Start zoom-out after 7s and redirect after 7.5s
+setTimeout(()=>{ splash.classList.add('zoomOut'); }, 7000);
+setTimeout(()=>{ window.location.href = "login.html"; }, 7500);
+</script>
+
+</body>
+</html>

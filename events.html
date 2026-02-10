@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Events | Church of the Holy Spirit Rumouke</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#576e45;
+  color:#ccd4c9;
+}
+
+/* HEADER */
+header{
+  background:#232d26;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+header img{width:40px}
+header span{font-size:18px;font-weight:bold;color:#aac64b}
+
+/* CONTAINER */
+.container{padding:15px;max-width:1200px;margin:auto}
+.page-title{font-size:20px;margin-bottom:15px;color:#aac64b}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr;gap:15px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.grid{grid-template-columns:repeat(3,1fr)}}
+
+/* CARD */
+.card{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+  animation:fadeUp .5s ease both;
+  transition:.3s;
+}
+.card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 18px 35px rgba(0,0,0,.4);
+}
+.card img{
+  width:100%;
+  border-radius:10px;
+  margin-bottom:10px;
+  cursor:pointer;
+  transition:.3s;
+}
+.card img:hover{transform:scale(1.04)}
+.card h4{margin:0 0 6px;color:#aac64b}
+.meta{font-size:13px;color:#899c6f;margin-bottom:6px}
+.meta i{margin-right:6px;color:#aac64b}
+.card p{font-size:14px;line-height:1.5}
+
+/* SKELETON */
+.skeleton{background:#232d26;border-radius:14px;padding:15px}
+.skeleton-title,.skeleton-line{
+  border-radius:6px;
+  background:linear-gradient(90deg,#6b746b 25%,#899c6f 37%,#6b746b 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.4s infinite;
+}
+.skeleton-title{height:14px;width:70%;margin-bottom:10px}
+.skeleton-line{height:10px;margin-bottom:8px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1}}
+
+/* STATUS */
+#statusMsg{text-align:center;margin-top:20px;font-weight:bold;color:#ffb4b4}
+
+/* IMAGE VIEWER */
+#imageViewer{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+#imageViewer img{
+  max-width:90%;
+  max-height:85%;
+  border-radius:12px;
+  animation:zoom .25s ease;
+}
+@keyframes zoom{from{transform:scale(.8);opacity:0}to{transform:scale(1)}}
+#closeViewer{
+  position:absolute;
+  top:15px;
+  right:20px;
+  font-size:28px;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="imageViewer" onclick="closeViewer()">
+  <i id="closeViewer" class="fa fa-times"></i>
+  <img id="viewerImg">
+</div>
+
+<header>
+  <img src="logo.png">
+  <span>Church of the Holy Spirit Rumouke</span>
+</header>
+
+<div class="container">
+  <div class="page-title">Upcoming Events</div>
+
+  <!-- SKELETON -->
+  <div class="grid" id="skeleton">
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+    <div class="skeleton">
+      <div class="skeleton-title"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="grid" id="eventGrid" style="display:none"></div>
+  <div id="statusMsg" style="display:none"></div>
+</div>
+
+<script>
+const grid=document.getElementById("eventGrid");
+const skeleton=document.getElementById("skeleton");
+const statusMsg=document.getElementById("statusMsg");
+
+function openViewer(src){
+  document.getElementById("viewerImg").src=src;
+  document.getElementById("imageViewer").style.display="flex";
+}
+function closeViewer(){
+  document.getElementById("imageViewer").style.display="none";
+}
+
+async function loadEvents(){
+  try{
+    const res=await fetch("loadJSON.php?section=events");
+    const data=await res.json();
+    skeleton.style.display="none";
+
+    if(!data || data.length===0){
+      statusMsg.textContent="No upcoming events.";
+      statusMsg.style.display="block";
+      return;
+    }
+
+    grid.style.display="grid";
+    data.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+    data.forEach(e=>{
+      grid.innerHTML+=`
+        <div class="card">
+          ${e.link?`<img src="${e.link}" onclick="openViewer('${e.link}')">`:``}
+          <h4>${e.title}</h4>
+          <div class="meta">
+            <i class="fa fa-calendar"></i>
+            ${new Date(e.date).toLocaleString()}
+          </div>
+          <p>${e.content}</p>
+        </div>
+      `;
+    });
+  }catch{
+    skeleton.style.display="none";
+    statusMsg.textContent="No events.";
+    statusMsg.style.display="block";
+  }
+}
+
+loadEvents();
+</script>
+
+</body>
+</html>

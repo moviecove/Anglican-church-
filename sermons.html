@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sermons | Church of the Holy Spirit Rumouke</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#576e45;
+  color:#ccd4c9;
+  overflow-x:hidden;
+}
+
+/* HEADER */
+header{
+  background:#232d26;
+  padding:15px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+header img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+header span{
+  font-size:18px;
+  font-weight:bold;
+  color:#aac64b;
+}
+
+/* CONTAINER */
+.container{ padding:15px; max-width:1200px; margin:auto; }
+
+/* PAGE TITLE */
+.page-title{
+  font-size:20px;
+  margin-bottom:12px;
+  color:#aac64b;
+}
+
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:15px;
+}
+
+/* CARD */
+.card{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+  transition:transform .3s, box-shadow .3s;
+  cursor:pointer;
+}
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 20px rgba(0,0,0,.3);
+}
+.card h4{
+  margin:0 0 6px;
+  color:#aac64b;
+}
+.card small{
+  font-size:12px;
+  color:#899c6f;
+}
+.card p{
+  font-size:14px;
+  line-height:1.5;
+  margin-top:6px;
+  color:#ccd4c9;
+}
+
+/* AUDIO PLAYER */
+audio{
+  width:100%;
+  margin-top:10px;
+  border-radius:8px;
+}
+
+/* SKELETON */
+.skeleton{
+  background:#232d26;
+  border-radius:14px;
+  padding:15px;
+}
+.skeleton-title,.skeleton-line{
+  border-radius:6px;
+  background:linear-gradient(90deg,#6b746b 25%,#899c6f 37%,#6b746b 63%);
+  background-size:400% 100%;
+  animation:shimmer 1.4s infinite;
+}
+.skeleton-title{height:14px;width:70%;margin-bottom:10px;}
+.skeleton-line{height:10px;width:100%;margin-bottom:8px;}
+@keyframes shimmer{
+  0%{background-position:100% 0;}
+  100%{background-position:-100% 0;}
+}
+
+/* EMPTY / ERROR MESSAGE */
+#statusMsg{
+  text-align:center;
+  margin-top:20px;
+  font-weight:bold;
+  color:#ffb4b4;
+}
+
+/* MODAL (Optional for sermon notes/images) */
+#playerModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+  flex-direction:column;
+}
+#playerModal audio{
+  width:90%;
+  max-width:500px;
+  margin-top:20px;
+  border-radius:10px;
+}
+#playerModal button{
+  margin-top:15px;
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  background:#aac64b;
+  font-weight:bold;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+  <span>Church of the Holy Spirit Rumouke</span>
+</header>
+
+<div class="container">
+  <div class="page-title">Sermons</div>
+
+  <!-- SKELETON -->
+  <div class="grid" id="skeleton">
+    <div class="skeleton"><div class="skeleton-title"></div><div class="skeleton-line"></div></div>
+    <div class="skeleton"><div class="skeleton-title"></div><div class="skeleton-line"></div></div>
+    <div class="skeleton"><div class="skeleton-title"></div><div class="skeleton-line"></div></div>
+  </div>
+
+  <!-- SERMONS GRID -->
+  <div class="grid" id="sermonGrid" style="display:none"></div>
+
+  <div id="statusMsg" style="display:none"></div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div id="playerModal">
+  <h4 id="playerTitle"></h4>
+  <audio controls id="playerAudio"></audio>
+  <button onclick="closePlayer()">Close</button>
+</div>
+
+<script>
+const skeleton = document.getElementById("skeleton");
+const grid = document.getElementById("sermonGrid");
+const statusMsg = document.getElementById("statusMsg");
+const playerModal = document.getElementById("playerModal");
+const playerAudio = document.getElementById("playerAudio");
+const playerTitle = document.getElementById("playerTitle");
+
+async function loadSermons(){
+  try{
+    const res = await fetch("loadJSON.php?section=sermons");
+    if(!res.ok) throw new Error();
+    const data = await res.json();
+
+    skeleton.style.display="none";
+
+    if(!data || data.length===0){
+      statusMsg.innerText="No sermons available at the moment.";
+      statusMsg.style.display="block";
+      return;
+    }
+
+    grid.style.display="grid";
+
+    data.sort((a,b)=>new Date(b.date) - new Date(a.date));
+
+    data.forEach(s=>{
+      grid.innerHTML += `
+        <div class="card" onclick="playSermon('${s.file}','${s.title}')">
+          <h4>${s.title}</h4>
+          <small>${new Date(s.date).toLocaleDateString()}</small>
+          <p>${s.description || ''}</p>
+        </div>
+      `;
+    });
+
+  }catch{
+    skeleton.style.display="none";
+    statusMsg.innerText="Error loading sermons.";
+    statusMsg.style.display="block";
+  }
+}
+
+function playSermon(src,title){
+  playerTitle.innerText = title;
+  playerAudio.src = src;
+  playerModal.style.display="flex";
+  playerAudio.play();
+}
+
+function closePlayer(){
+  playerAudio.pause();
+  playerAudio.src="";
+  playerModal.style.display="none";
+}
+
+loadSermons();
+</script>
+
+</body>
+</html>

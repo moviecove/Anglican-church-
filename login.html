@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Church of the Holy Spirit Rumouke | Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#576e45;
+  color:#fff;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+
+/* Card */
+.login-card{
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(10px);
+  padding:30px;
+  border-radius:15px;
+  width:90%;
+  max-width:380px;
+  text-align:center;
+  box-shadow:0 0 30px rgba(0,0,0,0.4);
+  position:relative;
+}
+
+/* Logo & titles */
+.login-card img{ width:80px; margin-bottom:10px; }
+.login-card h2{ margin:10px 0; font-weight:bold; }
+.login-card p{ opacity:0.8; font-size:14px; margin-bottom:20px; }
+
+/* Inputs */
+.input{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+}
+
+/* Buttons */
+.btn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  margin-top:10px;
+  font-size:14px;
+  cursor:pointer;
+  transition:0.3s;
+  position:relative;
+}
+.btn:hover{ transform:scale(1.03); }
+.primary{ background:#AAC64B; color:#000; }
+.social{ background:#fff; color:#000; display:flex; justify-content:center; align-items:center; gap:8px; font-weight:bold; }
+
+/* Feedback message */
+#feedback{
+  margin-top:15px;
+  font-size:14px;
+  font-weight:bold;
+  opacity:0;
+  transition:0.5s;
+  padding:8px 12px;
+  border-radius:6px;
+}
+
+/* Success & error styles */
+.success{ background:#4FC3F7; color:#000; opacity:1; }
+.error{ background:#FF6B6B; color:#fff; opacity:1; }
+
+/* Links */
+a{ color:#ccd4c9; text-decoration:none; font-weight:bold; }
+a:hover{ text-decoration:underline; }
+</style>
+</head>
+
+<body>
+<!-- LOGIN CARD -->
+<div class="login-card">
+
+<img src="logo.png" alt="Church Logo">
+
+<h2>Church of the Holy Spirit Rumouke</h2>
+<p>Member Login</p>
+
+<!-- Google login -->
+<button onclick="loginGoogle()" class="btn social">
+<i class="fab fa-google"></i> Continue with Google
+</button>
+
+<div style="margin:15px 0;opacity:0.6;">OR</div>
+
+<!-- Email login -->
+<input id="email" type="email" placeholder="Email" class="input">
+<input id="password" type="password" placeholder="Password" class="input">
+
+<button onclick="loginEmail()" class="btn primary">Login</button>
+
+<!-- Feedback message -->
+<div id="feedback"></div>
+
+<p style="font-size:13px;margin-top:15px;">
+No account? <a href="register.html">Register</a>
+</p>
+
+</div>
+
+<script>
+/* Firebase config */
+firebase.initializeApp({
+  apiKey: "AIzaSyBvltqTTiJzNvqCy8XhttCCQ3LL6e3IsVM",
+  authDomain: "church-of-the-holy-spiri-dcdf3.firebaseapp.com",
+  projectId: "church-of-the-holy-spiri-dcdf3",
+  appId: "1:926358296297:web:31439032719a21e7830278"
+});
+
+const auth = firebase.auth();
+const feedback = document.getElementById("feedback");
+
+/* Redirect logged-in users */
+auth.onAuthStateChanged(user => {
+  if(user){
+    showFeedback("Already logged in! Redirecting...", "success");
+    setTimeout(()=> window.location="dashboard.html", 1200);
+  }
+});
+
+/* Email login */
+function loginEmail(){
+  glow(event.target);
+  const emailValue = document.getElementById("email").value.trim();
+  const passwordValue = document.getElementById("password").value.trim();
+
+  if(!emailValue || !passwordValue){
+    showFeedback("Please enter email and password", "error");
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(emailValue, passwordValue)
+  .then(()=> {
+    showFeedback("Login successful! Redirecting...", "success");
+    setTimeout(()=> window.location="dashboard.html", 1500);
+  })
+  .catch(e=>{
+    showFeedback(e.message, "error");
+  });
+}
+
+/* Google login */
+function loginGoogle(){
+  glow(event.target);
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+  .then(()=> {
+    showFeedback("Login successful! Redirecting...", "success");
+    setTimeout(()=> window.location="dashboard.html", 1500);
+  })
+  .catch(e=>{
+    showFeedback(e.message, "error");
+  });
+}
+
+/* Button glow */
+function glow(btn){
+  btn.style.boxShadow="0 0 25px #4FC3F7";
+  setTimeout(()=> btn.style.boxShadow="none",300);
+}
+
+/* Show feedback */
+function showFeedback(msg,type){
+  feedback.innerText = msg;
+  feedback.className = type;
+}
+</script>
+
+<style>
+@keyframes fall{ to{ transform:translateY(120vh);} }
+</style>
+
+</body>
+</html>
